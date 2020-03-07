@@ -57,9 +57,10 @@ int main( int argc, char * argv[] )
     Contest_PrintStats( pNtkLogic, true );
     Abc_NtkDelete( pNtkNetlist );
 
+    cout << Abc_NtkGetFaninMax( pNtkLogic ) << endl;
     Vec_Ptr_t * violation = Contest_CollectFanoutExceedNodes( pNtkLogic, limit, true );
 
-    WHY_Rewrite( violation,1000 );
+    WHY_Rewrite( pNtkLogic, violation, 1000 );
 
     Vec_PtrFree( violation );
 

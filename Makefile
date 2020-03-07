@@ -27,6 +27,7 @@ clean :
 	rm -rf $(DIR_OBJ)
 	rm -f $(TARGET)
 	rm -f tags
+	rm *.out
 
 init :
 	if [ ! -d obj ]; then mkdir obj; fi
