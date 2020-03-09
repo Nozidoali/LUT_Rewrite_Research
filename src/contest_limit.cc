@@ -16,7 +16,6 @@ Vec_Ptr_t * Contest_CollectFanoutExceedNodes( Abc_Ntk_t * pNtk, int nLimit, bool
         Vec_PtrForEachEntry( Abc_Obj_t *, vNodes, pObj, i )
             cout << Abc_ObjId( pObj ) << "(" << Abc_ObjFanoutNum( pObj ) << ")" << "\t";
         cout << endl;
-        cout << "################" << endl;
     }
     return vNodes;
 }

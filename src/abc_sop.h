@@ -14,7 +14,7 @@
     Abc_SopForEachCube( pSop, nFanins, pCube )                                                     \
     Abc_SopForEachCube( pCube + (nFanins) + 3, nFanins, pCube2 )
 
-
+word Abc_SopToTruth( char * pSop, int nInputs );
 char * Abc_SopRegister( Mem_Flex_t * pMan, const char * pName );
 int Abc_SopGetVarNum( char * pSop );
 int Abc_SopCheck( char * pSop, int nFanins );

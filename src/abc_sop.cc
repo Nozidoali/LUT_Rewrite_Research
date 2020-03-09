@@ -1,5 +1,44 @@
 #include "abc_sop.h"
 
+char * Abc_SopCreateConst1( Mem_Flex_t * pMan )
+{
+    return Abc_SopRegister( pMan, " 1\n" );
+}
+
+char * Abc_SopCreateConst0( Mem_Flex_t * pMan )
+{
+    return Abc_SopRegister( pMan, " 0\n" );
+}
+
+char * Abc_SopCreateFromTruth( Mem_Flex_t * pMan, int nVars, unsigned * pTruth )
+{
+    char * pSop, * pCube;
+    int nMints, Counter, i, k;
+    if ( nVars == 0 )
+        return pTruth[0] ? Abc_SopCreateConst1(pMan) : Abc_SopCreateConst0(pMan);
+    // count the number of true minterms
+    Counter = 0;
+    nMints = (1 << nVars);
+    for ( i = 0; i < nMints; i++ )
+        Counter += ((pTruth[i>>5] & (1 << (i&31))) > 0);
+    // SOP is not well-defined if the truth table is constant 0
+    assert( Counter > 0 );
+    if ( Counter == 0 )
+        return NULL;
+    // start the cover
+    pSop = Abc_SopStart( pMan, Counter, nVars );
+    // create true minterms
+    Counter = 0;
+    for ( i = 0; i < nMints; i++ )
+        if ( (pTruth[i>>5] & (1 << (i&31))) > 0 )
+        {
+            pCube = pSop + Counter * (nVars + 3);
+            for ( k = 0; k < nVars; k++ )
+                pCube[k] = '0' + ((i & (1 << k)) > 0);
+            Counter++;
+        }
+    return pSop;
+}
 
 char * Abc_SopRegister( Mem_Flex_t * pMan, const char * pName )
 {
@@ -36,6 +75,9 @@ int Abc_SopCheck( char * pSop, int nFanins )
         {
             fprintf( stdout, "Abc_SopCheck: SOP has a mismatch between its cover size (%d) and its fanin number (%d).\n",
                 (int)(ABC_PTRDIFF_T)(pCubes - pCubesOld), nFanins );
+
+            // modified by why
+            fprintf( stdout, "%s", pSop );
             return 0;
         }
         // check the output values for this cube
@@ -65,6 +107,51 @@ int Abc_SopCheck( char * pSop, int nFanins )
     return 1;
 }
 
+#ifdef LIN
+  #define ABC_CONST(number) number ## ULL 
+#else // LIN64 and windows
+  #define ABC_CONST(number) number
+#endif
+
+word Abc_SopToTruth( char * pSop, int nInputs )
+{
+    static word Truth[8] = {
+        ABC_CONST(0xAAAAAAAAAAAAAAAA),
+        ABC_CONST(0xCCCCCCCCCCCCCCCC),
+        ABC_CONST(0xF0F0F0F0F0F0F0F0),
+        ABC_CONST(0xFF00FF00FF00FF00),
+        ABC_CONST(0xFFFF0000FFFF0000),
+        ABC_CONST(0xFFFFFFFF00000000),
+        ABC_CONST(0x0000000000000000),
+        ABC_CONST(0xFFFFFFFFFFFFFFFF)
+    };
+    word Cube, Result = 0;
+    int v, lit = 0;
+    int nVars = Abc_SopGetVarNum(pSop);
+    assert( nVars >= 0 && nVars <= 6 );
+    assert( nVars == nInputs );
+    do {
+        Cube = Truth[7];
+        for ( v = 0; v < nVars; v++, lit++ )
+        {
+            if ( pSop[lit] == '1' )
+                Cube &=  Truth[v];
+            else if ( pSop[lit] == '0' )
+                Cube &= ~Truth[v];
+            else if ( pSop[lit] != '-' )
+                assert( 0 );
+        }
+        Result |= Cube;
+        assert( pSop[lit] == ' ' );
+        lit++;
+        lit++;
+        assert( pSop[lit] == '\n' );
+        lit++;
+    } while ( pSop[lit] );
+    if ( Abc_SopIsComplement(pSop) )
+        Result = ~Result;
+    return Result;
+}
 
 int Abc_SopIsConst0( char * pSop )
 {

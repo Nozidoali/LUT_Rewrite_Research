@@ -5,10 +5,11 @@
 #include "abc_ntk.h"
 #include "abc_convert.h"
 
-void WHY_Rewrite( Abc_Ntk_t * pNtk, Vec_Ptr_t * vNodes, int worktime );
+#define NOTHING -1
+
+void WHY_Rewrite( Mem_Flex_t * pMan, Abc_Ntk_t * pNtk, Vec_Ptr_t * vNodes, int worktime );
 int WHY_CheckFaninOverlap ( Abc_Obj_t * pObj1, Abc_Obj_t * pObj2 );
 int WHY_CheckFaninOverlap ( Abc_Obj_t * pObj1, Abc_Obj_t * pObj2, Abc_Obj_t * pObj3 );
-void WHY_LimitFanout( Abc_Ntk_t * pNtk, int limit );
-void WHY_LimitFanout_Iter( Abc_Ntk_t * pNtk, int limit );
+double WHY_Evaluate ( Abc_Ntk_t * pNtk );
 
 #endif

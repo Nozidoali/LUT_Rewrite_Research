@@ -8,6 +8,7 @@
 #include "contest_show.h"
 #include "contest_rewrite.h"
 #include "why_limit.h"
+#include <iomanip>
 
 using namespace std;
 using namespace cmdline;
@@ -46,7 +47,7 @@ int main( int argc, char * argv[] )
             output += ".blif";
         }
     }
-    cout << "The AIG with maximum fanout constraint is in \"" << output << "\"" << endl;
+    // cout << "The AIG with maximum fanout constraint is in \"" << output << "\"" << endl;
 
     // initialize
     Abc_Start();
@@ -57,22 +58,24 @@ int main( int argc, char * argv[] )
     Contest_PrintStats( pNtkLogic, true );
     Abc_NtkDelete( pNtkNetlist );
 
-    cout << Abc_NtkGetFaninMax( pNtkLogic ) << endl;
-    Vec_Ptr_t * violation = Contest_CollectFanoutExceedNodes( pNtkLogic, limit, true );
+    cout << "The network is " << Abc_NtkGetFaninMax( pNtkLogic ) << "-bounded" << endl;
+    Vec_Ptr_t * violation = Contest_CollectFanoutExceedNodes( pNtkLogic, limit, false );
 
-    WHY_Rewrite( pNtkLogic, violation, 1000 );
+    // operations on AbC network.
+    Mem_Flex_t * pMan = Mem_FlexStart();
+
+    cout << "delay:" << std::setprecision(5) << WHY_Evaluate( pNtkLogic ) << endl;
+    WHY_Rewrite( pMan, pNtkLogic, violation, 1000 );
+    cout << "delay:" << std::setprecision(5) << WHY_Evaluate( pNtkLogic ) << endl;
 
     Vec_PtrFree( violation );
 
     pNtkNetlist = Abc_NtkToNetlist( pNtkLogic );
     Abc_NtkDelete( pNtkLogic );
-    int size1 = Abc_NtkNodeNum( pNtkNetlist );
-    int level1 = Abc_NtkLevel( pNtkNetlist );
-    cout << "QoR = " << size0 / static_cast < float >( size1 ) + level0 / static_cast < float >(level1) << endl;
     Io_WriteBlif( pNtkNetlist, const_cast < char * >( output.c_str() ), 0, 0, 0 );
     Abc_NtkDelete( pNtkNetlist );
 
     Abc_Stop();
-
+    Mem_FlexStop( pMan, 0 );
     return 0;
 }
